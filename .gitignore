@@ -1,0 +1,14 @@
+data/
+spectrograms/
+__pycache__/
+*.pyc
+.env
+.venv/
+*.npy
+models/*.keras
+models/*.h5
+!models/.gitkeep
+plots/*.png
+!plots/.gitkeep
+.DS_Store
+.ipynb_checkpoints/
