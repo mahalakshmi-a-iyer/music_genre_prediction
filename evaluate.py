@@ -155,18 +155,42 @@ def plot_confusion_matrix(y_true, y_pred, labels, save_path):
     print(f"Confusion matrix saved to: {save_path}")
 
 
+def load_or_create_test_data():
+    """Load cached test data, or create it from the full dataset."""
+    x_test_path = os.path.join(config.SPECTROGRAM_DIR, "X_test.npy")
+    y_test_path = os.path.join(config.SPECTROGRAM_DIR, "y_test.npy")
+    map_path = os.path.join(config.SPECTROGRAM_DIR, "test_file_map.csv")
+
+    if os.path.exists(x_test_path) and os.path.exists(y_test_path) and os.path.exists(map_path):
+        print("Loading cached test data...")
+        X_test = np.load(x_test_path)
+        y_test = np.load(y_test_path)
+        test_file_map = pd.read_csv(map_path)
+    else:
+        print("Test data not found. Generating from full dataset...")
+        from train import load_data, split_by_file
+        X, y, file_map = load_data()
+        _, X_test, _, y_test, test_file_map = split_by_file(X, y, file_map)
+
+        np.save(x_test_path, X_test)
+        np.save(y_test_path, y_test)
+        test_file_map.to_csv(map_path, index=False)
+        print("Test data saved for future runs.")
+
+    return X_test, y_test, test_file_map
+
+
 if __name__ == "__main__":
     print("Loading model and test data...")
     model = keras.models.load_model(config.MODEL_PATH)
 
-    X_test = np.load(os.path.join(config.SPECTROGRAM_DIR, "X_test.npy"))
-    y_test = np.load(os.path.join(config.SPECTROGRAM_DIR, "y_test.npy"))
-    test_file_map = pd.read_csv(
-        os.path.join(config.SPECTROGRAM_DIR, "test_file_map.csv")
-    )
+    X_test, y_test, test_file_map = load_or_create_test_data()
 
     # Plot training history
-    plot_training_history()
+    if os.path.exists(config.HISTORY_PATH):
+        plot_training_history()
+    else:
+        print("Training history not found. Skipping training curves plot.")
 
     # Chunk-level evaluation
     evaluate_chunks(model, X_test, y_test)
