@@ -95,21 +95,23 @@ def main():
 
     # Main area
     st.title("Music Genre Classifier")
-    st.markdown("Upload a `.wav` file to predict its genre.")
+    st.markdown("Upload an audio file to predict its genre.")
 
     uploaded_file = st.file_uploader(
-        "Choose a WAV file", type=["wav"], label_visibility="collapsed",
+        "Choose an audio file", type=["wav", "mp3"], label_visibility="collapsed",
     )
 
     if uploaded_file is not None:
         # Save to temp file (librosa needs a file path)
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+        suffix = os.path.splitext(uploaded_file.name)[1] or ".wav"
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
             tmp.write(uploaded_file.read())
             tmp_path = tmp.name
 
         try:
             # Audio player
-            st.audio(uploaded_file, format="audio/wav")
+            audio_format = "audio/mpeg" if suffix == ".mp3" else "audio/wav"
+            st.audio(uploaded_file, format=audio_format)
 
             # Load model and predict
             model = get_model()
